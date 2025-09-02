@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Authorize {{.ClientName}} - Passkey Auth</title>
+    <link rel="stylesheet" href="/oauth/design-system.css">
+    <style>
+        body {
+            min-height: 100vh;
+            background: var(--gradient-brand);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: var(--space-4);
+        }
+        
+        .auth-container {
+            background: var(--color-surface);
+            border-radius: var(--radius-2xl);
+            box-shadow: var(--shadow-2xl);
+            border: var(--border-1) solid var(--color-border-subtle);
+            padding: var(--space-8);
+            width: 100%;
+            max-width: 480px;
+            text-align: center;
+        }
+        
+        .logo {
+            font-size: var(--text-2xl);
+            font-weight: var(--font-bold);
+            color: var(--color-primary-400);
+            margin-bottom: var(--space-6);
+        }
+        
+        .client-info {
+            margin-bottom: var(--space-8);
+            padding: var(--space-6);
+            background: var(--gradient-surface);
+            border-radius: var(--radius-lg);
+            border: var(--border-1) solid var(--color-border-subtle);
+        }
+        
+        .client-name {
+            font-size: var(--text-xl);
+            font-weight: var(--font-semibold);
+            color: var(--color-text);
+            margin-bottom: var(--space-2);
+        }
+        
+        .auth-message {
+            color: var(--color-text-subtle);
+            font-size: var(--text-base);
+        }
+        
+        .auth-section h3 {
+            color: var(--color-text);
+            margin-bottom: var(--space-6);
+            font-size: var(--text-lg);
+            font-weight: var(--font-semibold);
+        }
+        
+        .auth-form {
+            display: flex;
+            flex-direction: column;
+            gap: var(--space-4);
+            margin-bottom: var(--space-6);
+        }
+        
+        #message {
+            margin: var(--space-4) 0;
+            padding: var(--space-3);
+            border-radius: var(--radius-md);
+            font-size: var(--text-sm);
+            display: none;
+        }
+        
+        #message.success {
+            background-color: var(--color-success-50);
+            color: var(--color-success-700);
+            border: var(--border-1) solid var(--color-success-500);
+            display: block;
+        }
+        
+        #message.error {
+            background-color: var(--color-error-50);
+            color: var(--color-error-700);
+            border: var(--border-1) solid var(--color-error-500);
+            display: block;
+        }
+        
+        [data-theme="dark"] #message.success {
+            background-color: rgba(34, 197, 94, 0.1);
+            color: var(--color-success-400);
+        }
+        
+        [data-theme="dark"] #message.error {
+            background-color: rgba(239, 68, 68, 0.1);
+            color: var(--color-error-400);
+        }
+        
+        .redirect-info {
+            color: var(--color-text-muted);
+            font-size: var(--text-sm);
+            margin-top: var(--space-6);
+            padding-top: var(--space-6);
+            border-top: var(--border-1) solid var(--color-border-subtle);
+        }
+        
+        .theme-toggle {
+            position: absolute;
+            top: var(--space-4);
+            right: var(--space-4);
+        }
+        
+        @media (max-width: 640px) {
+            .auth-container {
+                margin: var(--space-4);
+                padding: var(--space-6);
+            }
+        }
+    </style>
+</head>
+<body>
+    <button class="theme-toggle" onclick="toggleTheme()" title="Toggle Theme">
+        <span class="light-only">🌙</span>
+        <span class="dark-only">☀️</span>
+    </button>
+
+    <div class="auth-container">
+        <div class="logo">🔐 Passkey Auth</div>
+        
+        <div class="client-info">
+            <div class="client-name">{{.ClientName}}</div>
+            <div class="auth-message">wants to authenticate you using your passkey</div>
+        </div>
+        
+        <div class="auth-section">
+            <h3>Sign in with your passkey</h3>
+            
+            <div class="auth-form">
+                <div class="form-group">
+                    <input type="text" id="username" class="input input--lg" placeholder="Enter your username" />
+                </div>
+                
+                <button class="btn btn--primary btn--lg btn--full" onclick="authenticate()">
+                    🔐 Sign In with Passkey
+                </button>
+                
+                <button class="btn btn--secondary btn--lg btn--full" onclick="register()">
+                    ✨ Create New Passkey
+                </button>
+            </div>
+        </div>
+        
+        <div id="message"></div>
+        
+        <div class="redirect-info">
+            After authentication, you'll be redirected back to <strong>{{.ClientName}}</strong>
+        </div>
+    </div>
+    
+    <script>
+        // OAuth data passed from server
+        const authData = {{.AuthDataJSON}};
+        
+        // Theme switching
+        function toggleTheme() {
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('passkey-theme', newTheme);
+        }
+
+        // Load saved theme
+        const savedTheme = localStorage.getItem('passkey-theme');
+        if (savedTheme) {
+            document.documentElement.setAttribute('data-theme', savedTheme);
+        }
+    </script>
+    <script src="/oauth/auth.js"></script>
+</body>
+</html>

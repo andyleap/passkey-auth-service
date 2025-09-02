@@ -1,0 +1,60 @@
+version: '3.8'
+
+services:
+  passkey-auth:
+    build: .
+    ports:
+      - "8443:8443"
+    environment:
+      - PORT=8443
+      - RP_ID=localhost
+      - RP_ORIGIN=https://localhost:8443
+      - S3_ENDPOINT=minio:9000
+      - S3_BUCKET=passkey-auth
+      - S3_ACCESS_KEY=minioadmin
+      - S3_SECRET_KEY=minioadmin
+      - S3_USE_SSL=false
+      - REDIS_ADDR=redis:6379
+      - REDIS_PASSWORD=
+      - REDIS_DB=0
+    depends_on:
+      - redis
+      - minio
+    volumes:
+      - ./server.crt:/root/server.crt
+      - ./server.key:/root/server.key
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+  minio:
+    image: minio/minio:latest
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      - MINIO_ROOT_USER=minioadmin
+      - MINIO_ROOT_PASSWORD=minioadmin
+    command: server /data --console-address ":9001"
+    volumes:
+      - minio_data:/data
+
+  # Optional: Create S3 bucket on startup
+  minio-setup:
+    image: minio/mc:latest
+    depends_on:
+      - minio
+    entrypoint: >
+      /bin/sh -c "
+      /usr/bin/mc alias set myminio http://minio:9000 minioadmin minioadmin;
+      /usr/bin/mc mb myminio/passkey-auth --ignore-existing;
+      exit 0;
+      "
+
+volumes:
+  redis_data:
+  minio_data:

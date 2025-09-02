@@ -1,0 +1,50 @@
+# Go
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+go.work
+go.work.sum
+
+# Build artifacts
+/passkey-auth
+/cmd/server/passkey-auth
+/server
+
+# Environment
+.env
+.env.local
+
+# Certificates
+*.crt
+*.key
+*.pem
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Docker
+.docker/
+
+# Logs
+*.log
+
+# Node modules and assets
+node_modules/
+internal/ui/assets/dist/

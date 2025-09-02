@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Passkey Authentication Service</title>
+    <link rel="stylesheet" href="/oauth/design-system.css">
+    <style>
+        body {
+            min-height: 100vh;
+            background: var(--gradient-brand);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: var(--space-4);
+        }
+        
+        .landing-container {
+            background: var(--color-surface);
+            border-radius: var(--radius-2xl);
+            box-shadow: var(--shadow-2xl);
+            border: var(--border-1) solid var(--color-border-subtle);
+            padding: var(--space-12);
+            width: 100%;
+            max-width: 600px;
+            text-align: center;
+        }
+        
+        .logo {
+            font-size: var(--text-5xl);
+            margin-bottom: var(--space-4);
+        }
+        
+        .service-title {
+            font-size: var(--text-3xl);
+            font-weight: var(--font-bold);
+            color: var(--color-text);
+            margin-bottom: var(--space-4);
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .service-description {
+            font-size: var(--text-lg);
+            color: var(--color-text-subtle);
+            line-height: var(--leading-relaxed);
+            margin-bottom: var(--space-8);
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .info-cards {
+            display: grid;
+            gap: var(--space-6);
+            margin-bottom: var(--space-8);
+        }
+        
+        @media (min-width: 640px) {
+            .info-cards {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
+        .info-card {
+            background: var(--gradient-surface);
+            border-radius: var(--radius-lg);
+            padding: var(--space-6);
+            border: var(--border-1) solid var(--color-border-subtle);
+        }
+        
+        .info-card-icon {
+            font-size: var(--text-2xl);
+            margin-bottom: var(--space-3);
+        }
+        
+        .info-card-title {
+            font-size: var(--text-base);
+            font-weight: var(--font-semibold);
+            color: var(--color-text);
+            margin-bottom: var(--space-2);
+        }
+        
+        .info-card-text {
+            font-size: var(--text-sm);
+            color: var(--color-text-subtle);
+            line-height: var(--leading-relaxed);
+        }
+        
+        .endpoints-section {
+            margin-top: var(--space-8);
+            padding-top: var(--space-8);
+            border-top: var(--border-1) solid var(--color-border-subtle);
+        }
+        
+        .endpoints-title {
+            font-size: var(--text-lg);
+            font-weight: var(--font-semibold);
+            color: var(--color-text);
+            margin-bottom: var(--space-4);
+        }
+        
+        .endpoints-list {
+            text-align: left;
+            max-width: 400px;
+            margin: 0 auto;
+        }
+        
+        .endpoint {
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+            padding: var(--space-2);
+            border-radius: var(--radius-md);
+            margin-bottom: var(--space-2);
+            font-family: var(--font-mono);
+            font-size: var(--text-sm);
+        }
+        
+        .endpoint:hover {
+            background: var(--color-hover-overlay);
+        }
+        
+        .endpoint-method {
+            color: var(--color-primary-400);
+            font-weight: var(--font-semibold);
+            min-width: 45px;
+        }
+        
+        .endpoint-path {
+            color: var(--color-text);
+            flex: 1;
+        }
+        
+        .theme-toggle {
+            position: absolute;
+            top: var(--space-4);
+            right: var(--space-4);
+        }
+        
+        .status-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--space-2);
+            font-size: var(--text-sm);
+            color: var(--color-success-500);
+            margin-top: var(--space-4);
+        }
+        
+        .status-dot {
+            width: var(--space-2);
+            height: var(--space-2);
+            background: var(--color-success-500);
+            border-radius: var(--radius-full);
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        @media (max-width: 640px) {
+            .landing-container {
+                margin: var(--space-4);
+                padding: var(--space-8);
+            }
+            
+            .service-title {
+                font-size: var(--text-2xl);
+            }
+            
+            .service-description {
+                font-size: var(--text-base);
+            }
+        }
+    </style>
+</head>
+<body>
+    <button class="theme-toggle" onclick="toggleTheme()" title="Toggle Theme">
+        <span class="light-only">🌙</span>
+        <span class="dark-only">☀️</span>
+    </button>
+
+    <div class="landing-container">
+        <div class="logo">🔐</div>
+        <h1 class="service-title">Passkey Authentication Service</h1>
+        <p class="service-description">
+            A secure, production-ready WebAuthn authentication service that provides passwordless login 
+            for your applications using modern passkey technology.
+        </p>
+        
+        <div class="info-cards">
+            <div class="info-card">
+                <div class="info-card-icon">🛡️</div>
+                <div class="info-card-title">Secure & Passwordless</div>
+                <div class="info-card-text">
+                    Uses WebAuthn/FIDO2 standards for secure authentication without passwords
+                </div>
+            </div>
+            
+            <div class="info-card">
+                <div class="info-card-icon">🔗</div>
+                <div class="info-card-title">OAuth Integration</div>
+                <div class="info-card-text">
+                    Easy OAuth-style integration for seamless authentication flows
+                </div>
+            </div>
+            
+            <div class="info-card">
+                <div class="info-card-icon">⚡</div>
+                <div class="info-card-title">Production Ready</div>
+                <div class="info-card-text">
+                    Built for scale with Redis sessions and S3-compatible storage
+                </div>
+            </div>
+            
+            <div class="info-card">
+                <div class="info-card-icon">🎨</div>
+                <div class="info-card-title">Modern UI</div>
+                <div class="info-card-text">
+                    Beautiful, responsive interface with dark mode support
+                </div>
+            </div>
+        </div>
+        
+        <div class="status-indicator">
+            <span class="status-dot"></span>
+            Service is running and ready
+        </div>
+        
+        <div class="endpoints-section">
+            <h2 class="endpoints-title">API Endpoints</h2>
+            <div class="endpoints-list">
+                <div class="endpoint">
+                    <span class="endpoint-method">GET</span>
+                    <span class="endpoint-path">/authorize</span>
+                </div>
+                <div class="endpoint">
+                    <span class="endpoint-method">POST</span>
+                    <span class="endpoint-path">/oauth/token</span>
+                </div>
+                <div class="endpoint">
+                    <span class="endpoint-method">POST</span>
+                    <span class="endpoint-path">/api/v1/register/*</span>
+                </div>
+                <div class="endpoint">
+                    <span class="endpoint-method">POST</span>
+                    <span class="endpoint-path">/api/v1/login/*</span>
+                </div>
+                <div class="endpoint">
+                    <span class="endpoint-method">GET</span>
+                    <span class="endpoint-path">/health</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Theme switching
+        function toggleTheme() {
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('passkey-theme', newTheme);
+        }
+
+        // Load saved theme
+        const savedTheme = localStorage.getItem('passkey-theme');
+        if (savedTheme) {
+            document.documentElement.setAttribute('data-theme', savedTheme);
+        }
+    </script>
+</body>
+</html>

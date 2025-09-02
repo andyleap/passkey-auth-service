@@ -1,0 +1,30 @@
+{
+  "id": "VmVuZGFu",
+  "name": "Vendan",
+  "displayName": "Vendan",
+  "credentials": [
+    {
+      "id": "bmHv71zHhrghv+HxSPcLYw==",
+      "publicKey": "pQECAyYgASFYIN/VZDpmN3PWjL/6UOVY+jUFsINihMGFPFPUCCfkwtByIlggBtc7d7hN0nl2C3vlhx31x/CkPRdWJkIk5V97VSFd3hY=",
+      "attestationType": "none",
+      "transport": [
+        "hybrid",
+        "internal"
+      ],
+      "flags": {
+        "userPresent": true,
+        "userVerified": true,
+        "backupEligible": true,
+        "backupState": true
+      },
+      "authenticator": {
+        "AAGUID": "6puNZk0BHSE85La0jLV11A==",
+        "signCount": 0,
+        "cloneWarning": false,
+        "attachment": "platform"
+      }
+    }
+  ],
+  "createdAt": "2025-09-01T18:55:02.183134109-07:00",
+  "updatedAt": "2025-09-01T18:55:02.184174563-07:00"
+}
