@@ -1,0 +1,3 @@
+[submodule "blue-design-system"]
+	path = blue-design-system
+	url = https://github.com/andyleap/blue-design-system.git
