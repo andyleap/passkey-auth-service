@@ -104,6 +104,22 @@ func (m *MemoryStorage) DeleteSession(ctx context.Context, sessionID string) err
 	return nil
 }
 
+func (m *MemoryStorage) GetUserSessions(ctx context.Context, username string) ([]*models.Session, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	
+	var userSessions []*models.Session
+	now := time.Now()
+	
+	for _, session := range m.sessions {
+		if session.Username == username && now.Before(session.ExpiresAt) {
+			userSessions = append(userSessions, session)
+		}
+	}
+	
+	return userSessions, nil
+}
+
 // cleanupRoutine runs every 5 minutes to clean up expired sessions
 func (m *MemoryStorage) cleanupRoutine() {
 	ticker := time.NewTicker(5 * time.Minute)

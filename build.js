@@ -7,10 +7,12 @@ const path = require('path');
 // Build configuration
 const buildConfig = {
   entryPoints: {
-    // CSS entry point
+    // CSS entry points
     'design-system': './blue-design-system/design-system.css',
-    // JS entry point
-    'auth': './internal/ui/assets/oauth/auth.js'
+    'app-styles': './internal/ui/assets/src/app-styles.css',
+    // JS entry points
+    'auth': './internal/ui/assets/oauth/auth.js',
+    'control-panel': './internal/ui/assets/src/control-panel/index.jsx'
   },
   bundle: true,
   minify: true,
@@ -19,6 +21,8 @@ const buildConfig = {
   loader: {
     '.css': 'css',
   },
+  jsx: 'automatic',
+  jsxImportSource: 'preact',
   target: ['chrome90', 'firefox88', 'safari14'],
 };
 

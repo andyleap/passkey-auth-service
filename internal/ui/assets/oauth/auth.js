@@ -12,148 +12,136 @@ function clearMessage() {
     messageDiv.textContent = '';
 }
 
-async function authenticate() {
-    const username = document.getElementById('username').value.trim();
-    if (!username) {
-        showMessage('Please enter a username');
-        return;
-    }
-    
-    const authBtn = document.querySelector('button[onclick="authenticate()"]');
-    const regBtn = document.querySelector('button[onclick="register()"]');
-    
-    // Set loading state
-    authBtn.classList.add('btn--loading');
-    authBtn.disabled = true;
-    regBtn.disabled = true;
-    
-    clearMessage();
-    showMessage('Starting authentication...', 'success');
-    
-    try {
-        // Begin login
-        const response = await fetch('/api/v1/login/begin?username=' + encodeURIComponent(username), {
-            method: 'POST'
-        });
-        
-        if (!response.ok) {
-            throw new Error('Failed to start authentication: ' + response.statusText);
-        }
-        
-        const options = await response.json();
-        showMessage('Please use your passkey...', 'success');
-        
-        // WebAuthn login
-        const publicKeyOptions = PublicKeyCredential.parseRequestOptionsFromJSON(options.publicKey);
-        const credential = await navigator.credentials.get({
-            publicKey: publicKeyOptions
-        });
-        
-        if (!credential) {
-            throw new Error('Authentication was cancelled');
-        }
-        
-        showMessage('Completing authentication...', 'success');
-        
-        // Finish login
-        const credentialData = credential.toJSON();
-        const verifyResponse = await fetch('/api/v1/login/finish?username=' + encodeURIComponent(username), {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(credentialData)
-        });
-        
-        if (!verifyResponse.ok) {
-            throw new Error('Authentication failed: ' + verifyResponse.statusText);
-        }
-        
-        const result = await verifyResponse.json();
-        showMessage('Authentication successful! Redirecting...', 'success');
-        
-        // Complete OAuth flow - redirect with authorization code
-        completeOAuthFlow(username);
-        
-    } catch (error) {
-        console.error('Authentication error:', error);
-        showMessage('Authentication failed: ' + error.message);
-    } finally {
-        // Reset loading state
-        authBtn.classList.remove('btn--loading');
-        authBtn.disabled = false;
-        regBtn.disabled = false;
+function ready(fn) {
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', fn);
+    } else {
+        fn();
     }
 }
 
-async function register() {
+async function signInWithPasskey() {
     const username = document.getElementById('username').value.trim();
     if (!username) {
         showMessage('Please enter a username');
         return;
     }
     
-    const authBtn = document.querySelector('button[onclick="authenticate()"]');
-    const regBtn = document.querySelector('button[onclick="register()"]');
+    const signInBtn = document.getElementById('signin-btn');
     
     // Set loading state
-    regBtn.classList.add('btn--loading');
-    authBtn.disabled = true;
-    regBtn.disabled = true;
+    signInBtn.classList.add('btn--loading');
+    signInBtn.disabled = true;
     
     clearMessage();
-    showMessage('Starting registration...', 'success');
+    showMessage('Checking account...', 'success');
     
     try {
-        // Begin registration
-        const response = await fetch('/api/v1/register/begin?username=' + encodeURIComponent(username), {
+        // Try login first
+        const loginResponse = await fetch('/api/v1/login/begin?username=' + encodeURIComponent(username), {
             method: 'POST'
         });
         
-        if (!response.ok) {
-            throw new Error('Failed to start registration: ' + response.statusText);
+        if (loginResponse.ok) {
+            // User exists, proceed with login
+            await handleLogin(username, loginResponse);
+        } else {
+            // User doesn't exist, proceed with registration
+            showMessage('Creating new passkey...', 'success');
+            await handleRegistration(username);
         }
-        
-        const options = await response.json();
-        showMessage('Please create your passkey...', 'success');
-        
-        // WebAuthn registration
-        const publicKeyOptions = PublicKeyCredential.parseCreationOptionsFromJSON(options.publicKey);
-        const credential = await navigator.credentials.create({
-            publicKey: publicKeyOptions
-        });
-        
-        if (!credential) {
-            throw new Error('Registration was cancelled');
-        }
-        
-        showMessage('Completing registration...', 'success');
-        
-        // Finish registration
-        const credentialData = credential.toJSON();
-        const verifyResponse = await fetch('/api/v1/register/finish?username=' + encodeURIComponent(username), {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(credentialData)
-        });
-        
-        if (!verifyResponse.ok) {
-            throw new Error('Registration failed: ' + verifyResponse.statusText);
-        }
-        
-        showMessage('Registration successful! Now signing you in...', 'success');
-        
-        // Complete OAuth flow - redirect with authorization code
-        completeOAuthFlow(username);
         
     } catch (error) {
-        console.error('Registration error:', error);
-        showMessage('Registration failed: ' + error.message);
+        console.error('Sign in error:', error);
+        showMessage('Sign in failed: ' + error.message);
     } finally {
         // Reset loading state
-        regBtn.classList.remove('btn--loading');
-        authBtn.disabled = false;
-        regBtn.disabled = false;
+        signInBtn.classList.remove('btn--loading');
+        signInBtn.disabled = false;
     }
 }
+
+async function handleLogin(username, loginResponse) {
+    const options = await loginResponse.json();
+    showMessage('Please use your passkey to sign in...', 'success');
+    
+    // WebAuthn login
+    const publicKeyOptions = PublicKeyCredential.parseRequestOptionsFromJSON(options.publicKey);
+    const credential = await navigator.credentials.get({
+        publicKey: publicKeyOptions
+    });
+    
+    if (!credential) {
+        throw new Error('Sign in was cancelled');
+    }
+    
+    showMessage('Completing sign in...', 'success');
+    
+    // Finish login
+    const credentialData = credential.toJSON();
+    const verifyResponse = await fetch('/api/v1/login/finish?username=' + encodeURIComponent(username), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(credentialData)
+    });
+    
+    if (!verifyResponse.ok) {
+        throw new Error('Sign in failed: ' + verifyResponse.statusText);
+    }
+    
+    showMessage('Sign in successful! Redirecting...', 'success');
+    
+    // Save username for future use
+    localStorage.setItem('passkey-username', username);
+    
+    completeOAuthFlow(username);
+}
+
+async function handleRegistration(username) {
+    // Begin registration
+    const response = await fetch('/api/v1/register/begin?username=' + encodeURIComponent(username), {
+        method: 'POST'
+    });
+    
+    if (!response.ok) {
+        throw new Error('Failed to start registration: ' + response.statusText);
+    }
+    
+    const options = await response.json();
+    showMessage('Please create your passkey...', 'success');
+    
+    // WebAuthn registration
+    const publicKeyOptions = PublicKeyCredential.parseCreationOptionsFromJSON(options.publicKey);
+    const credential = await navigator.credentials.create({
+        publicKey: publicKeyOptions
+    });
+    
+    if (!credential) {
+        throw new Error('Passkey creation was cancelled');
+    }
+    
+    showMessage('Completing setup...', 'success');
+    
+    // Finish registration
+    const credentialData = credential.toJSON();
+    const verifyResponse = await fetch('/api/v1/register/finish?username=' + encodeURIComponent(username), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(credentialData)
+    });
+    
+    if (!verifyResponse.ok) {
+        throw new Error('Passkey creation failed: ' + verifyResponse.statusText);
+    }
+    
+    showMessage('Passkey created! Signing you in...', 'success');
+    
+    // Save username for future use
+    localStorage.setItem('passkey-username', username);
+    
+    completeOAuthFlow(username);
+}
+
 
 async function completeOAuthFlow(username) {
     try {
@@ -183,3 +171,17 @@ async function completeOAuthFlow(username) {
         showMessage('Failed to complete authentication flow: ' + error.message);
     }
 }
+
+// Initialize event listeners when DOM is ready
+ready(function() {
+    const signInBtn = document.getElementById('signin-btn');
+    const usernameInput = document.getElementById('username');
+    
+    // Load saved username
+    const savedUsername = localStorage.getItem('passkey-username');
+    if (savedUsername && usernameInput) {
+        usernameInput.value = savedUsername;
+    }
+    
+    signInBtn?.addEventListener('click', signInWithPasskey);
+});

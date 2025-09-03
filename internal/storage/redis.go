@@ -114,3 +114,37 @@ func (r *RedisStorage) DeleteSession(ctx context.Context, sessionID string) erro
 	key := fmt.Sprintf("session:%s", sessionID)
 	return r.client.Del(ctx, key).Err()
 }
+
+func (r *RedisStorage) GetUserSessions(ctx context.Context, username string) ([]*models.Session, error) {
+	// Get all session keys
+	keys, err := r.client.Keys(ctx, "session:*").Result()
+	if err != nil {
+		return nil, fmt.Errorf("failed to get session keys: %w", err)
+	}
+	
+	var userSessions []*models.Session
+	now := time.Now()
+	
+	// Check each session to see if it belongs to the user
+	for _, key := range keys {
+		data, err := r.client.Get(ctx, key).Result()
+		if err == redis.Nil {
+			continue // Session was deleted between keys() and get()
+		}
+		if err != nil {
+			continue // Skip problematic sessions
+		}
+		
+		var session models.Session
+		if err := json.Unmarshal([]byte(data), &session); err != nil {
+			continue // Skip malformed sessions
+		}
+		
+		// Check if session belongs to user and is not expired
+		if session.Username == username && now.Before(session.ExpiresAt) {
+			userSessions = append(userSessions, &session)
+		}
+	}
+	
+	return userSessions, nil
+}

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/andyleap/passkey/internal/models"
 )
@@ -48,6 +49,42 @@ func (f *FilesystemStorage) GetUser(ctx context.Context, username string) (*mode
 	}
 
 	return &user, nil
+}
+
+func (f *FilesystemStorage) GetUserByID(ctx context.Context, userID []byte) (*models.User, error) {
+	// For filesystem storage, we need to search through all users to find the one with matching ID
+	usersDir := filepath.Join(f.basePath, "users")
+	files, err := os.ReadDir(usersDir)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return nil, fmt.Errorf("user not found")
+		}
+		return nil, fmt.Errorf("failed to read users directory: %w", err)
+	}
+
+	for _, file := range files {
+		if !strings.HasSuffix(file.Name(), ".json") {
+			continue
+		}
+
+		userPath := filepath.Join(usersDir, file.Name())
+		data, err := os.ReadFile(userPath)
+		if err != nil {
+			continue // Skip problematic files
+		}
+
+		var user models.User
+		if err := json.Unmarshal(data, &user); err != nil {
+			continue // Skip malformed files
+		}
+
+		// Check if this user's ID matches
+		if string(user.ID) == string(userID) {
+			return &user, nil
+		}
+	}
+
+	return nil, fmt.Errorf("user not found")
 }
 
 func (f *FilesystemStorage) SaveUser(ctx context.Context, user *models.User) error {

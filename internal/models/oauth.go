@@ -6,10 +6,10 @@ import (
 
 // Client represents an OAuth client application
 type Client struct {
-	ID           string    `json:"id"`
-	Name         string    `json:"name"`
-	RedirectURIs []string  `json:"redirect_uris"`
-	CreatedAt    time.Time `json:"created_at"`
+	ID           string    `json:"id" yaml:"id"`
+	Name         string    `json:"name" yaml:"name"`
+	RedirectURIs []string  `json:"redirect_uris" yaml:"redirect_uris"`
+	CreatedAt    time.Time `json:"created_at" yaml:"created_at"`
 }
 
 // AuthorizationRequest represents an OAuth authorization request

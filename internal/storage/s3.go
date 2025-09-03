@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"strings"
 
 	"github.com/andyleap/passkey/internal/models"
 	"github.com/minio/minio-go/v7"
@@ -52,6 +53,48 @@ func (s *S3Storage) GetUser(ctx context.Context, username string) (*models.User,
 	}
 
 	return &user, nil
+}
+
+func (s *S3Storage) GetUserByID(ctx context.Context, userID []byte) (*models.User, error) {
+	// For S3 storage, we need to list all users and search for the matching ID
+	// This is not optimal but works for the current implementation
+	objectCh := s.client.ListObjects(ctx, s.bucket, minio.ListObjectsOptions{
+		Prefix: "users/",
+	})
+
+	for object := range objectCh {
+		if object.Err != nil {
+			continue
+		}
+
+		if !strings.HasSuffix(object.Key, ".json") {
+			continue
+		}
+
+		// Get the user object
+		obj, err := s.client.GetObject(ctx, s.bucket, object.Key, minio.GetObjectOptions{})
+		if err != nil {
+			continue // Skip problematic objects
+		}
+
+		data, err := io.ReadAll(obj)
+		obj.Close()
+		if err != nil {
+			continue // Skip objects that can't be read
+		}
+
+		var user models.User
+		if err := json.Unmarshal(data, &user); err != nil {
+			continue // Skip malformed objects
+		}
+
+		// Check if this user's ID matches
+		if string(user.ID) == string(userID) {
+			return &user, nil
+		}
+	}
+
+	return nil, fmt.Errorf("user not found")
 }
 
 func (s *S3Storage) SaveUser(ctx context.Context, user *models.User) error {

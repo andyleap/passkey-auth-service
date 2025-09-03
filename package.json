@@ -17,5 +17,8 @@
   "type": "commonjs",
   "devDependencies": {
     "esbuild": "^0.25.9"
+  },
+  "dependencies": {
+    "preact": "^10.27.1"
   }
 }

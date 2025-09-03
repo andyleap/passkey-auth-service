@@ -1,0 +1,20 @@
+clients:
+  - id: demo-app
+    name: Demo Application
+    redirect_uris:
+      - "http://localhost:3000/callback"
+      - "https://localhost:3000/callback"
+      - "http://localhost:8080/callback"
+      - "https://localhost:8080/callback"
+
+  - id: test-app
+    name: Test Application
+    redirect_uris:
+      - "http://localhost:3001/callback"
+      - "https://localhost:3001/callback"
+
+  - id: my-production-app
+    name: My Production App
+    redirect_uris:
+      - "https://myapp.com/auth/callback"
+      - "https://staging.myapp.com/auth/callback"

@@ -7,6 +7,7 @@ import (
 	"html/template"
 	"log/slog"
 	"net/http"
+	"strings"
 
 	"github.com/andyleap/passkey/internal/models"
 	"github.com/andyleap/passkey/internal/oauth"
@@ -74,17 +75,27 @@ func (oh *OAuthUIHandlers) AuthorizeHandler(w http.ResponseWriter, r *http.Reque
 
 // AssetsHandler serves embedded static assets
 func (oh *OAuthUIHandlers) AssetsHandler(w http.ResponseWriter, r *http.Request) {
-	var assetPath string
+	// Extract filename from URL path (/oauth/filename.ext)
+	filename := r.URL.Path[7:] // Remove "/oauth/" prefix
+	
+	// Security: prevent path traversal
+	if strings.Contains(filename, "..") || strings.Contains(filename, "/") {
+		http.NotFound(w, r)
+		return
+	}
+	
+	// Build asset path
+	assetPath := "assets/dist/" + filename
+	
+	// Determine content type from file extension
 	var contentType string
-
-	// Map specific routes to built asset files
-	switch r.URL.Path {
-	case "/oauth/design-system.css":
-		assetPath = "assets/dist/design-system.css"
+	switch {
+	case strings.HasSuffix(filename, ".css"):
 		contentType = "text/css"
-	case "/oauth/auth.js":
-		assetPath = "assets/dist/auth.js"
+	case strings.HasSuffix(filename, ".js"):
 		contentType = "application/javascript"
+	case strings.HasSuffix(filename, ".map"):
+		contentType = "application/json"
 	default:
 		http.NotFound(w, r)
 		return
@@ -145,4 +156,16 @@ func (oh *OAuthUIHandlers) renderErrorPage(w http.ResponseWriter, title, message
 func (oh *OAuthUIHandlers) RenderLandingPage(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "text/html")
 	return oh.templates.ExecuteTemplate(w, "landing.html", nil)
+}
+
+// RenderControlPanel renders the user control panel
+func (oh *OAuthUIHandlers) RenderControlPanel(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "text/html")
+	return oh.templates.ExecuteTemplate(w, "control_panel.html", nil)
+}
+
+// RenderRegisterPage renders the registration page
+func (oh *OAuthUIHandlers) RenderRegisterPage(w http.ResponseWriter) error {
+	w.Header().Set("Content-Type", "text/html")
+	return oh.templates.ExecuteTemplate(w, "register.html", nil)
 }
