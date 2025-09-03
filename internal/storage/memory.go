@@ -29,7 +29,7 @@ func NewMemoryStorage() *MemoryStorage {
 func (m *MemoryStorage) SaveWebAuthnSession(ctx context.Context, username string, session *models.WebAuthnSession) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	
+
 	m.webauthnSessions[username] = session
 	return nil
 }
@@ -37,7 +37,7 @@ func (m *MemoryStorage) SaveWebAuthnSession(ctx context.Context, username string
 func (m *MemoryStorage) GetWebAuthnSession(ctx context.Context, username string) (*models.WebAuthnSession, error) {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
-	
+
 	session, exists := m.webauthnSessions[username]
 	if !exists {
 		return nil, nil
@@ -60,7 +60,7 @@ func (m *MemoryStorage) GetWebAuthnSession(ctx context.Context, username string)
 func (m *MemoryStorage) DeleteWebAuthnSession(ctx context.Context, username string) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	
+
 	delete(m.webauthnSessions, username)
 	return nil
 }
@@ -68,7 +68,7 @@ func (m *MemoryStorage) DeleteWebAuthnSession(ctx context.Context, username stri
 func (m *MemoryStorage) SaveSession(ctx context.Context, session *models.Session) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	
+
 	m.sessions[session.ID] = session
 	return nil
 }
@@ -76,7 +76,7 @@ func (m *MemoryStorage) SaveSession(ctx context.Context, session *models.Session
 func (m *MemoryStorage) GetSession(ctx context.Context, sessionID string) (*models.Session, error) {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
-	
+
 	session, exists := m.sessions[sessionID]
 	if !exists {
 		return nil, nil
@@ -99,7 +99,7 @@ func (m *MemoryStorage) GetSession(ctx context.Context, sessionID string) (*mode
 func (m *MemoryStorage) DeleteSession(ctx context.Context, sessionID string) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	
+
 	delete(m.sessions, sessionID)
 	return nil
 }
@@ -107,16 +107,16 @@ func (m *MemoryStorage) DeleteSession(ctx context.Context, sessionID string) err
 func (m *MemoryStorage) GetUserSessions(ctx context.Context, username string) ([]*models.Session, error) {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
-	
+
 	var userSessions []*models.Session
 	now := time.Now()
-	
+
 	for _, session := range m.sessions {
 		if session.Username == username && now.Before(session.ExpiresAt) {
 			userSessions = append(userSessions, session)
 		}
 	}
-	
+
 	return userSessions, nil
 }
 

@@ -35,7 +35,7 @@ func NewS3Storage(endpoint, accessKey, secretKey, bucket string, useSSL bool) (*
 
 func (s *S3Storage) GetUser(ctx context.Context, username string) (*models.User, error) {
 	key := fmt.Sprintf("users/%s.json", username)
-	
+
 	object, err := s.client.GetObject(ctx, s.bucket, key, minio.GetObjectOptions{})
 	if err != nil {
 		return nil, fmt.Errorf("failed to get user from S3: %w", err)
@@ -99,7 +99,7 @@ func (s *S3Storage) GetUserByID(ctx context.Context, userID []byte) (*models.Use
 
 func (s *S3Storage) SaveUser(ctx context.Context, user *models.User) error {
 	key := fmt.Sprintf("users/%s.json", user.Name)
-	
+
 	data, err := json.Marshal(user)
 	if err != nil {
 		return fmt.Errorf("failed to marshal user: %w", err)
@@ -117,7 +117,7 @@ func (s *S3Storage) SaveUser(ctx context.Context, user *models.User) error {
 
 func (s *S3Storage) UserExists(ctx context.Context, username string) (bool, error) {
 	key := fmt.Sprintf("users/%s.json", username)
-	
+
 	_, err := s.client.StatObject(ctx, s.bucket, key, minio.StatObjectOptions{})
 	if err != nil {
 		// Check if it's a "not found" error
@@ -127,6 +127,6 @@ func (s *S3Storage) UserExists(ctx context.Context, username string) (bool, erro
 		}
 		return false, fmt.Errorf("failed to check if user exists: %w", err)
 	}
-	
+
 	return true, nil
 }

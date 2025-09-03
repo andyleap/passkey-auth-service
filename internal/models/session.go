@@ -15,7 +15,7 @@ type Session struct {
 }
 
 type WebAuthnSession struct {
-	Username string                     `json:"username"`
-	Data     *webauthn.SessionData     `json:"data"`
-	ExpiresAt time.Time                `json:"expiresAt"`
+	Username  string                `json:"username"`
+	Data      *webauthn.SessionData `json:"data"`
+	ExpiresAt time.Time             `json:"expiresAt"`
 }

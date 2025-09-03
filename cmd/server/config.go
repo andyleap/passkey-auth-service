@@ -81,17 +81,17 @@ func (c *Config) loadOAuthClients() error {
 		LoadedOAuthClients = getDefaultOAuthClients()
 		return nil
 	}
-	
+
 	data, err := os.ReadFile(c.OAuthClientsFile)
 	if err != nil {
 		return fmt.Errorf("failed to read OAuth clients file %s: %w", c.OAuthClientsFile, err)
 	}
-	
+
 	var config OAuthClientsConfig
 	if err := yaml.Unmarshal(data, &config); err != nil {
 		return fmt.Errorf("failed to parse YAML OAuth clients file: %w", err)
 	}
-	
+
 	// Convert to map for easy lookup and validate
 	LoadedOAuthClients = make(map[string]*models.Client)
 	for _, client := range config.Clients {
@@ -106,7 +106,7 @@ func (c *Config) loadOAuthClients() error {
 		}
 		LoadedOAuthClients[client.ID] = client
 	}
-	
+
 	return nil
 }
 

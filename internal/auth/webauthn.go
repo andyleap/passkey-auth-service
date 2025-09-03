@@ -55,9 +55,9 @@ func (w *WebAuthnService) BeginRegistration(ctx *http.Request, username string) 
 	options, sessionData, err := w.webauthn.BeginRegistration(
 		user,
 		webauthn.WithAuthenticatorSelection(protocol.AuthenticatorSelection{
-			RequireResidentKey:      protocol.ResidentKeyRequired(),
-			ResidentKey:             protocol.ResidentKeyRequirementRequired,
-			UserVerification:        protocol.VerificationRequired,
+			RequireResidentKey: protocol.ResidentKeyRequired(),
+			ResidentKey:        protocol.ResidentKeyRequirementRequired,
+			UserVerification:   protocol.VerificationRequired,
 		}),
 	)
 	if err != nil {
@@ -128,12 +128,11 @@ func (w *WebAuthnService) FinishRegistration(ctx *http.Request, username string)
 	return nil
 }
 
-
 // BeginDiscoverableLogin starts a discoverable credential login flow (no username required)
 func (w *WebAuthnService) BeginDiscoverableLogin(ctx *http.Request) (*protocol.CredentialAssertion, string, error) {
 	// Generate a temporary session ID for this discoverable login attempt
 	sessionID := generateSessionID()
-	
+
 	// Create assertion options for discoverable credentials
 	log.Printf("DEBUG: Calling BeginDiscoverableLogin()")
 	options, sessionData, err := w.webauthn.BeginDiscoverableLogin()
@@ -160,7 +159,7 @@ func (w *WebAuthnService) BeginDiscoverableLogin(ctx *http.Request) (*protocol.C
 func (w *WebAuthnService) FinishDiscoverableLogin(ctx *http.Request, sessionID string) (*models.User, error) {
 	log.Printf("DEBUG: Starting discoverable login finish for session: %s", sessionID)
 	log.Printf("DEBUG: Request Origin: %s, Host: %s", ctx.Header.Get("Origin"), ctx.Host)
-	
+
 	session, err := w.sessionStorage.GetWebAuthnSession(ctx.Context(), sessionID)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get webauthn session: %w", err)
@@ -175,25 +174,25 @@ func (w *WebAuthnService) FinishDiscoverableLogin(ctx *http.Request, sessionID s
 	var foundUser *models.User
 	credential, err := w.webauthn.FinishDiscoverableLogin(func(rawID, userHandle []byte) (webauthn.User, error) {
 		log.Printf("DEBUG: FinishDiscoverableLogin callback - rawID: %x, userHandle: %x", rawID, userHandle)
-		
+
 		// Find user by user handle (which is the user ID)
 		user, err := w.userStorage.GetUserByID(ctx.Context(), userHandle)
 		if err != nil {
 			log.Printf("DEBUG: Failed to find user by ID %x: %v", userHandle, err)
 			return nil, err
 		}
-		
+
 		log.Printf("DEBUG: Found user: %s with %d credentials", user.Name, len(user.Credentials))
 		for i, cred := range user.Credentials {
 			log.Printf("DEBUG: Credential %d - ID: %x", i, cred.ID)
 		}
-		
+
 		foundUser = user // Store the user for later use
 		return user, nil
 	}, *session.Data, ctx)
-	
+
 	log.Printf("DEBUG: FinishDiscoverableLogin returned credential: %v", credential != nil)
-	
+
 	if err != nil {
 		log.Printf("DEBUG: FinishDiscoverableLogin failed: %v", err)
 		return nil, fmt.Errorf("failed to finish discoverable login: %w", err)
@@ -216,12 +215,12 @@ func (w *WebAuthnService) FinishDiscoverableLogin(ctx *http.Request, sessionID s
 func (w *WebAuthnService) isUserAuthenticated(ctx *http.Request, username string) bool {
 	// Check for session cookie or header
 	sessionID := ""
-	
+
 	// Try to get session ID from cookie
 	if cookie, err := ctx.Cookie("session_id"); err == nil {
 		sessionID = cookie.Value
 	}
-	
+
 	// Try to get session ID from Authorization header
 	if sessionID == "" {
 		if auth := ctx.Header.Get("Authorization"); auth != "" {
@@ -231,22 +230,22 @@ func (w *WebAuthnService) isUserAuthenticated(ctx *http.Request, username string
 			}
 		}
 	}
-	
+
 	if sessionID == "" {
 		return false
 	}
-	
+
 	// Validate session
 	session, err := w.sessionStorage.GetSession(ctx.Context(), sessionID)
 	if err != nil || session == nil {
 		return false
 	}
-	
+
 	// Check if session belongs to the user and is not expired
 	if session.Username != username || session.ExpiresAt.Before(time.Now()) {
 		return false
 	}
-	
+
 	return true
 }
 
@@ -344,7 +343,7 @@ func (w *WebAuthnService) DeleteCredential(ctx context.Context, username, creden
 	if err != nil {
 		return fmt.Errorf("user not found: %w", err)
 	}
-	
+
 	// Find and remove the credential
 	// credentialID is base64url-encoded (URL-safe), so compare with base64url-encoded cred.ID
 	newCredentials := make([]webauthn.Credential, 0, len(user.Credentials))
@@ -357,18 +356,18 @@ func (w *WebAuthnService) DeleteCredential(ctx context.Context, username, creden
 			found = true
 		}
 	}
-	
+
 	if !found {
 		return fmt.Errorf("credential not found")
 	}
-	
+
 	// Don't allow deletion of the last credential
 	if len(newCredentials) == 0 {
 		return fmt.Errorf("cannot delete the last credential")
 	}
-	
+
 	user.Credentials = newCredentials
 	user.UpdatedAt = time.Now()
-	
+
 	return w.userStorage.SaveUser(ctx, user)
 }

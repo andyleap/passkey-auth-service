@@ -14,22 +14,22 @@ type Client struct {
 
 // AuthorizationRequest represents an OAuth authorization request
 type AuthorizationRequest struct {
-	ClientID     string    `json:"client_id"`
-	RedirectURI  string    `json:"redirect_uri"`
-	State        string    `json:"state"`
-	Username     string    `json:"username,omitempty"`
-	CreatedAt    time.Time `json:"created_at"`
-	ExpiresAt    time.Time `json:"expires_at"`
+	ClientID    string    `json:"client_id"`
+	RedirectURI string    `json:"redirect_uri"`
+	State       string    `json:"state"`
+	Username    string    `json:"username,omitempty"`
+	CreatedAt   time.Time `json:"created_at"`
+	ExpiresAt   time.Time `json:"expires_at"`
 }
 
 // AuthorizationCode represents an authorization code
 type AuthorizationCode struct {
-	Code         string    `json:"code"`
-	ClientID     string    `json:"client_id"`
-	RedirectURI  string    `json:"redirect_uri"`
-	State        string    `json:"state"`
-	Username     string    `json:"username"`
-	UserID       []byte    `json:"user_id"`
-	CreatedAt    time.Time `json:"created_at"`
-	ExpiresAt    time.Time `json:"expires_at"`
+	Code        string    `json:"code"`
+	ClientID    string    `json:"client_id"`
+	RedirectURI string    `json:"redirect_uri"`
+	State       string    `json:"state"`
+	Username    string    `json:"username"`
+	UserID      []byte    `json:"user_id"`
+	CreatedAt   time.Time `json:"created_at"`
+	ExpiresAt   time.Time `json:"expires_at"`
 }

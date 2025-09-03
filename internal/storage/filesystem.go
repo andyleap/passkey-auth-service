@@ -34,7 +34,7 @@ func NewFilesystemStorage(basePath string) (*FilesystemStorage, error) {
 
 func (f *FilesystemStorage) GetUser(ctx context.Context, username string) (*models.User, error) {
 	userPath := filepath.Join(f.basePath, "users", username+".json")
-	
+
 	data, err := os.ReadFile(userPath)
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -89,7 +89,7 @@ func (f *FilesystemStorage) GetUserByID(ctx context.Context, userID []byte) (*mo
 
 func (f *FilesystemStorage) SaveUser(ctx context.Context, user *models.User) error {
 	userPath := filepath.Join(f.basePath, "users", user.Name+".json")
-	
+
 	data, err := json.MarshalIndent(user, "", "  ")
 	if err != nil {
 		return fmt.Errorf("failed to marshal user: %w", err)
@@ -104,7 +104,7 @@ func (f *FilesystemStorage) SaveUser(ctx context.Context, user *models.User) err
 
 func (f *FilesystemStorage) UserExists(ctx context.Context, username string) (bool, error) {
 	userPath := filepath.Join(f.basePath, "users", username+".json")
-	
+
 	_, err := os.Stat(userPath)
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -112,6 +112,6 @@ func (f *FilesystemStorage) UserExists(ctx context.Context, username string) (bo
 		}
 		return false, fmt.Errorf("failed to check user file: %w", err)
 	}
-	
+
 	return true, nil
 }

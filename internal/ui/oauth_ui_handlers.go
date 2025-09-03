@@ -77,16 +77,16 @@ func (oh *OAuthUIHandlers) AuthorizeHandler(w http.ResponseWriter, r *http.Reque
 func (oh *OAuthUIHandlers) AssetsHandler(w http.ResponseWriter, r *http.Request) {
 	// Extract filename from URL path (/oauth/filename.ext)
 	filename := r.URL.Path[7:] // Remove "/oauth/" prefix
-	
+
 	// Security: prevent path traversal
 	if strings.Contains(filename, "..") || strings.Contains(filename, "/") {
 		http.NotFound(w, r)
 		return
 	}
-	
+
 	// Build asset path
 	assetPath := "assets/dist/" + filename
-	
+
 	// Determine content type from file extension
 	var contentType string
 	switch {

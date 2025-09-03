@@ -56,7 +56,7 @@ func (s *Server) LogoutHandler(w http.ResponseWriter, r *http.Request) {
 	if sessionID == "" {
 		sessionID = r.URL.Query().Get("sessionId")
 	}
-	
+
 	if sessionID == "" {
 		http.Error(w, "sessionId required", http.StatusBadRequest)
 		return
@@ -79,12 +79,12 @@ func (s *Server) HealthHandler(w http.ResponseWriter, r *http.Request) {
 // getUserFromRequest extracts and validates user from session
 func (s *Server) getUserFromRequest(r *http.Request) (string, error) {
 	sessionID := ""
-	
+
 	// Try cookie first
 	if cookie, err := r.Cookie("session_id"); err == nil {
 		sessionID = cookie.Value
 	}
-	
+
 	// Try Authorization header
 	if sessionID == "" {
 		if auth := r.Header.Get("Authorization"); auth != "" {
@@ -93,20 +93,20 @@ func (s *Server) getUserFromRequest(r *http.Request) (string, error) {
 			}
 		}
 	}
-	
+
 	if sessionID == "" {
 		return "", fmt.Errorf("no session found")
 	}
-	
+
 	session, err := s.sessionStorage.GetSession(r.Context(), sessionID)
 	if err != nil || session == nil {
 		return "", fmt.Errorf("invalid session")
 	}
-	
+
 	if session.ExpiresAt.Before(time.Now()) {
 		return "", fmt.Errorf("session expired")
 	}
-	
+
 	return session.Username, nil
 }
 
@@ -117,13 +117,13 @@ func (s *Server) UserCredentialsHandler(w http.ResponseWriter, r *http.Request) 
 		http.Error(w, "Authentication required", http.StatusUnauthorized)
 		return
 	}
-	
+
 	user, err := s.webauthnService.GetUser(r.Context(), username)
 	if err != nil {
 		http.Error(w, "User not found", http.StatusNotFound)
 		return
 	}
-	
+
 	// Convert credentials to a safe format for JSON
 	credentials := make([]map[string]interface{}, len(user.Credentials))
 	for i, cred := range user.Credentials {
@@ -132,7 +132,7 @@ func (s *Server) UserCredentialsHandler(w http.ResponseWriter, r *http.Request) 
 			"createdAt": user.CreatedAt, // Approximate - we don't store individual cred dates
 		}
 	}
-	
+
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]interface{}{
 		"username":    user.Name,
@@ -149,14 +149,14 @@ func (s *Server) UserSessionsHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Authentication required", http.StatusUnauthorized)
 		return
 	}
-	
+
 	sessions, err := s.sessionStorage.GetUserSessions(r.Context(), username)
 	if err != nil {
 		slog.Error("Failed to get user sessions", "error", err)
 		http.Error(w, "Failed to get sessions", http.StatusInternalServerError)
 		return
 	}
-	
+
 	// Convert sessions to safe format
 	safeSessions := make([]map[string]interface{}, len(sessions))
 	for i, session := range sessions {
@@ -167,7 +167,7 @@ func (s *Server) UserSessionsHandler(w http.ResponseWriter, r *http.Request) {
 			"current":   session.ID == r.Header.Get("X-Session-ID"), // Mark current session
 		}
 	}
-	
+
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]interface{}{
 		"username": username,
@@ -182,20 +182,20 @@ func (s *Server) DeleteCredentialHandler(w http.ResponseWriter, r *http.Request)
 		http.Error(w, "Authentication required", http.StatusUnauthorized)
 		return
 	}
-	
+
 	credentialID := r.PathValue("credentialId")
 	if credentialID == "" {
 		http.Error(w, "Credential ID required", http.StatusBadRequest)
 		return
 	}
-	
+
 	err = s.webauthnService.DeleteCredential(r.Context(), username, credentialID)
 	if err != nil {
 		slog.Error("Failed to delete credential", "error", err, "username", username, "credentialId", credentialID)
 		http.Error(w, "Failed to delete credential", http.StatusInternalServerError)
 		return
 	}
-	
+
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]string{"status": "deleted"})
 }
@@ -207,27 +207,27 @@ func (s *Server) DeleteSessionHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Authentication required", http.StatusUnauthorized)
 		return
 	}
-	
+
 	sessionID := r.PathValue("sessionId")
 	if sessionID == "" {
 		http.Error(w, "Session ID required", http.StatusBadRequest)
 		return
 	}
-	
+
 	// Verify session belongs to user
 	session, err := s.sessionStorage.GetSession(r.Context(), sessionID)
 	if err != nil || session == nil || session.Username != username {
 		http.Error(w, "Session not found", http.StatusNotFound)
 		return
 	}
-	
+
 	err = s.sessionStorage.DeleteSession(r.Context(), sessionID)
 	if err != nil {
 		slog.Error("Failed to delete session", "error", err, "sessionId", sessionID)
 		http.Error(w, "Failed to delete session", http.StatusInternalServerError)
 		return
 	}
-	
+
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]string{"status": "deleted"})
 }

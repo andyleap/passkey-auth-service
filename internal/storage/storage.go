@@ -17,7 +17,7 @@ type SessionStorage interface {
 	SaveWebAuthnSession(ctx context.Context, username string, session *models.WebAuthnSession) error
 	GetWebAuthnSession(ctx context.Context, username string) (*models.WebAuthnSession, error)
 	DeleteWebAuthnSession(ctx context.Context, username string) error
-	
+
 	SaveSession(ctx context.Context, session *models.Session) error
 	GetSession(ctx context.Context, sessionID string) (*models.Session, error)
 	DeleteSession(ctx context.Context, sessionID string) error
