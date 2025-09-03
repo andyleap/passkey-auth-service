@@ -7,12 +7,12 @@ import (
 )
 
 type User struct {
-	ID          []byte                      `json:"id"`
-	Name        string                      `json:"name"`
-	DisplayName string                      `json:"displayName"`
-	Credentials []webauthn.Credential       `json:"credentials"`
-	CreatedAt   time.Time                   `json:"createdAt"`
-	UpdatedAt   time.Time                   `json:"updatedAt"`
+	ID          []byte                `json:"id"`
+	Name        string                `json:"name"`
+	DisplayName string                `json:"displayName"`
+	Credentials []webauthn.Credential `json:"credentials"`
+	CreatedAt   time.Time             `json:"createdAt"`
+	UpdatedAt   time.Time             `json:"updatedAt"`
 }
 
 func (u User) WebAuthnID() []byte {

@@ -13,10 +13,15 @@ go.work.sum
 /passkey-auth
 /cmd/server/passkey-auth
 /server
+bin/
 
 # Environment
 .env
 .env.local
+
+# Development data and configs
+data/
+clients.yaml
 
 # Certificates
 *.crt

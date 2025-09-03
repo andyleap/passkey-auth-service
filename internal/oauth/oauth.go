@@ -14,34 +14,15 @@ import (
 
 type OAuthService struct {
 	sessionStorage storage.SessionStorage
-	// In a real implementation, you'd have client storage too
-	// For now, we'll use a simple in-memory map
-	clients map[string]*models.Client
+	clients        map[string]*models.Client
 }
 
-func NewOAuthService(sessionStorage storage.SessionStorage) *OAuthService {
-	// Create some default clients for demo
-	clients := map[string]*models.Client{
-		"demo-app": {
-			ID:   "demo-app",
-			Name: "Demo Application",
-			RedirectURIs: []string{
-				"http://localhost:3000/callback",
-				"https://localhost:3000/callback",
-				"http://localhost:8080/callback",
-				"https://localhost:8080/callback",
-			},
-			CreatedAt: time.Now(),
-		},
-		"test-app": {
-			ID:   "test-app", 
-			Name: "Test Application",
-			RedirectURIs: []string{
-				"http://localhost:3001/callback",
-				"https://localhost:3001/callback",
-			},
-			CreatedAt: time.Now(),
-		},
+func NewOAuthService(sessionStorage storage.SessionStorage, clients map[string]*models.Client) *OAuthService {
+	// Set CreatedAt for all clients if not set
+	for _, client := range clients {
+		if client.CreatedAt.IsZero() {
+			client.CreatedAt = time.Now()
+		}
 	}
 
 	return &OAuthService{

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/andyleap/passkey/internal/models"
 )
@@ -33,7 +34,7 @@ func NewFilesystemStorage(basePath string) (*FilesystemStorage, error) {
 
 func (f *FilesystemStorage) GetUser(ctx context.Context, username string) (*models.User, error) {
 	userPath := filepath.Join(f.basePath, "users", username+".json")
-	
+
 	data, err := os.ReadFile(userPath)
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -50,9 +51,45 @@ func (f *FilesystemStorage) GetUser(ctx context.Context, username string) (*mode
 	return &user, nil
 }
 
+func (f *FilesystemStorage) GetUserByID(ctx context.Context, userID []byte) (*models.User, error) {
+	// For filesystem storage, we need to search through all users to find the one with matching ID
+	usersDir := filepath.Join(f.basePath, "users")
+	files, err := os.ReadDir(usersDir)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return nil, fmt.Errorf("user not found")
+		}
+		return nil, fmt.Errorf("failed to read users directory: %w", err)
+	}
+
+	for _, file := range files {
+		if !strings.HasSuffix(file.Name(), ".json") {
+			continue
+		}
+
+		userPath := filepath.Join(usersDir, file.Name())
+		data, err := os.ReadFile(userPath)
+		if err != nil {
+			continue // Skip problematic files
+		}
+
+		var user models.User
+		if err := json.Unmarshal(data, &user); err != nil {
+			continue // Skip malformed files
+		}
+
+		// Check if this user's ID matches
+		if string(user.ID) == string(userID) {
+			return &user, nil
+		}
+	}
+
+	return nil, fmt.Errorf("user not found")
+}
+
 func (f *FilesystemStorage) SaveUser(ctx context.Context, user *models.User) error {
 	userPath := filepath.Join(f.basePath, "users", user.Name+".json")
-	
+
 	data, err := json.MarshalIndent(user, "", "  ")
 	if err != nil {
 		return fmt.Errorf("failed to marshal user: %w", err)
@@ -67,7 +104,7 @@ func (f *FilesystemStorage) SaveUser(ctx context.Context, user *models.User) err
 
 func (f *FilesystemStorage) UserExists(ctx context.Context, username string) (bool, error) {
 	userPath := filepath.Join(f.basePath, "users", username+".json")
-	
+
 	_, err := os.Stat(userPath)
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -75,6 +112,6 @@ func (f *FilesystemStorage) UserExists(ctx context.Context, username string) (bo
 		}
 		return false, fmt.Errorf("failed to check user file: %w", err)
 	}
-	
+
 	return true, nil
 }

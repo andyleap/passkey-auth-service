@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/andyleap/passkey/internal/api"
 	"github.com/andyleap/passkey/internal/auth"
@@ -93,9 +94,9 @@ func main() {
 
 	// Setup services
 	webauthnService := auth.NewWebAuthnService(webAuthn, userStorage, sessionStorage)
-	oauthService := oauth.NewOAuthService(sessionStorage)
+	oauthService := oauth.NewOAuthService(sessionStorage, LoadedOAuthClients)
 	apiServer := api.NewServer(webauthnService, sessionStorage)
-	
+
 	// Setup OAuth handlers
 	oauthUIHandlers, err := ui.NewOAuthUIHandlers(oauthService)
 	if err != nil {
@@ -111,10 +112,9 @@ func main() {
 	mux.HandleFunc("GET /authorize", oauthUIHandlers.AuthorizeHandler)
 	mux.HandleFunc("POST /oauth/complete", oauthAPIHandlers.CompleteHandler)
 	mux.HandleFunc("POST /oauth/token", oauthAPIHandlers.TokenHandler)
-	
-	// OAuth static assets (embedded)
-	mux.HandleFunc("GET /oauth/design-system.css", oauthUIHandlers.AssetsHandler)
-	mux.HandleFunc("GET /oauth/auth.js", oauthUIHandlers.AssetsHandler)
+
+	// OAuth static assets (embedded) - simplified wildcard handler
+	mux.HandleFunc("GET /oauth/{filename}", oauthUIHandlers.AssetsHandler)
 
 	// API routes (for direct integration)
 	mux.HandleFunc("POST /api/v1/register/begin", webauthnService.RegisterBeginHandler)
@@ -125,9 +125,22 @@ func main() {
 	mux.HandleFunc("GET /api/v1/validate/{sessionId}", apiServer.ValidateSessionHandler)
 	mux.HandleFunc("GET /health", apiServer.HealthHandler)
 
+	// Control panel API routes
+	mux.HandleFunc("GET /api/v1/user/credentials", apiServer.UserCredentialsHandler)
+	mux.HandleFunc("GET /api/v1/user/sessions", apiServer.UserSessionsHandler)
+	mux.HandleFunc("DELETE /api/v1/user/credentials/{credentialId}", apiServer.DeleteCredentialHandler)
+	mux.HandleFunc("DELETE /api/v1/user/sessions/{sessionId}", apiServer.DeleteSessionHandler)
+
 	// Index page (landing or redirect)
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		serveIndex(w, r, cfg, oauthUIHandlers)
+		serveIndex(w, r, cfg, oauthUIHandlers, apiServer, sessionStorage)
+	})
+
+	mux.HandleFunc("/register", func(w http.ResponseWriter, r *http.Request) {
+		if err := oauthUIHandlers.RenderRegisterPage(w); err != nil {
+			slog.Error("Failed to render register page", "error", err)
+			http.Error(w, "Internal server error", http.StatusInternalServerError)
+		}
 	})
 
 	// Apply middleware
@@ -135,7 +148,7 @@ func main() {
 
 	// Create HTTP server
 	server := &http.Server{
-		Addr: ":" + cfg.Port,
+		Addr:    ":" + cfg.Port,
 		Handler: handler,
 	}
 
@@ -161,18 +174,27 @@ func main() {
 	}
 }
 
-func serveIndex(w http.ResponseWriter, r *http.Request, cfg *Config, uiHandlers *ui.OAuthUIHandlers) {
+func serveIndex(w http.ResponseWriter, r *http.Request, cfg *Config, uiHandlers *ui.OAuthUIHandlers, apiServer *api.Server, sessionStorage storage.SessionStorage) {
 	if r.URL.Path != "/" {
 		http.NotFound(w, r)
 		return
 	}
-	
+
 	// If redirect URL is configured, redirect to it
 	if cfg.IndexRedirect != "" {
 		http.Redirect(w, r, cfg.IndexRedirect, http.StatusFound)
 		return
 	}
-	
+
+	// Check if user is authenticated - if so, show control panel
+	if isAuthenticated(r, sessionStorage) {
+		if err := uiHandlers.RenderControlPanel(w); err != nil {
+			slog.Error("Failed to render control panel", "error", err)
+			http.Error(w, "Internal server error", http.StatusInternalServerError)
+		}
+		return
+	}
+
 	// Otherwise serve the landing page using the UI templates
 	if err := uiHandlers.RenderLandingPage(w); err != nil {
 		slog.Error("Failed to render landing page", "error", err)
@@ -180,3 +202,32 @@ func serveIndex(w http.ResponseWriter, r *http.Request, cfg *Config, uiHandlers 
 	}
 }
 
+// isAuthenticated checks if the request has a valid session
+func isAuthenticated(r *http.Request, sessionStorage storage.SessionStorage) bool {
+	sessionID := ""
+
+	// Try cookie first
+	if cookie, err := r.Cookie("session_id"); err == nil {
+		sessionID = cookie.Value
+	}
+
+	// Try Authorization header
+	if sessionID == "" {
+		if auth := r.Header.Get("Authorization"); auth != "" {
+			if len(auth) > 7 && auth[:7] == "Bearer " {
+				sessionID = auth[7:]
+			}
+		}
+	}
+
+	if sessionID == "" {
+		return false
+	}
+
+	session, err := sessionStorage.GetSession(r.Context(), sessionID)
+	if err != nil || session == nil {
+		return false
+	}
+
+	return session.ExpiresAt.After(time.Now())
+}

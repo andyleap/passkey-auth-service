@@ -4,8 +4,10 @@ go 1.25.0
 
 require (
 	github.com/go-webauthn/webauthn v0.10.2
+	github.com/jessevdk/go-flags v1.6.1
 	github.com/minio/minio-go/v7 v7.0.95
 	github.com/redis/go-redis/v9 v9.5.1
+	gopkg.in/yaml.v3 v3.0.1
 )
 
 require (
@@ -19,7 +21,6 @@ require (
 	github.com/golang-jwt/jwt/v5 v5.2.1 // indirect
 	github.com/google/go-tpm v0.9.0 // indirect
 	github.com/google/uuid v1.6.0 // indirect
-	github.com/jessevdk/go-flags v1.6.1 // indirect
 	github.com/klauspost/compress v1.18.0 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.11 // indirect
 	github.com/minio/crc64nvme v1.0.2 // indirect
