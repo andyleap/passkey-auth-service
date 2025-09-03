@@ -40,6 +40,9 @@ jobs:
           go mod download
           npm ci
 
+      - name: Build assets
+        run: npm run build
+
       - name: Run Go tests
         run: go test -v -race -coverprofile=coverage.out ./...
 
@@ -59,9 +62,6 @@ jobs:
             gofmt -s -l .
             exit 1
           fi
-
-      - name: Build assets
-        run: npm run build
 
       - name: Build application
         run: go build -v ./cmd/server
