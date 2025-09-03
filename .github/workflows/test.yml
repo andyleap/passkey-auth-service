@@ -44,13 +44,7 @@ jobs:
         run: npm run build
 
       - name: Run Go tests
-        run: go test -v -race -coverprofile=coverage.out ./...
-
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v4
-        with:
-          file: ./coverage.out
-          flags: unittests
+        run: go test -v -race ./...
 
       - name: Run Go vet
         run: go vet ./...
