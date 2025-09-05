@@ -41,8 +41,9 @@ FROM alpine:latest
 RUN apk --no-cache add ca-certificates tzdata
 WORKDIR /root/
 
-# Copy the binary
+# Copy the binary and set execute permissions
 COPY --from=go-builder /app/passkey-auth .
+RUN chmod +x ./passkey-auth
 
 # Create non-root user
 RUN addgroup -g 1001 -S passkey && \
